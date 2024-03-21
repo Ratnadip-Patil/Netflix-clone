@@ -21,25 +21,7 @@ pipeline {
                     url: 'https://github.com/Ratnadip-Patil/Netflix-clone.git'
                 )
             }
-        }
-
-        stage('Docker Image Build') {
-            when { expression { params.action == 'create' } }
-            steps {
-                script {
-                    dockerBuild("${params.ImageName}", "${params.ImageTag}", "${params.DockerHubUser}")
-                }
-            }
-        }
-
-        stage('Docker Image Push: DockerHub') {
-            when { expression { params.action == 'create' } }
-            steps {
-                script {
-                    dockerImagePush("${params.ImageName}", "${params.ImageTag}", "${params.ratnadip2703}", "${params.#Patil1234}")
-                }
-            }
-        }
+        }     
 
         stage('Kubernetes Deployment') {
             when { expression { params.action == 'create' } }
