@@ -1,62 +1,61 @@
 @Library('my-shared-library') _
 
-pipeline{
-
+pipeline {
     agent any
-    //agent { label 'Demo' }
 
-    parameters{
-
-        choice(name: 'action', choices: 'create\ndelete', description: 'Choose create/Destroy')
-        string(name: 'ImageName', description: "name of the docker build", defaultValue: 'javapp')
-        string(name: 'ImageTag', description: "tag of the docker build", defaultValue: 'v1')
-        string(name: 'DockerHubUser', description: "name of the Application", defaultValue: 'praveensingam1994')
+    parameters {
+        choice(name: 'action', choices: ['create', 'delete'], description: 'Choose create/Destroy')
+        string(name: 'ImageName', description: "Name of the docker build", defaultValue: 'javapp')
+        string(name: 'ImageTag', description: "Tag of the docker build", defaultValue: 'v1')
+        string(name: 'DockerHubUser', description: "Docker Hub Username", defaultValue: 'your_username')
+        password(name: 'DockerHubPassword', description: "Docker Hub Password")
+        // You can use 'credentials' parameter for Docker Hub credentials instead of username/password
     }
 
-    stages{
-         
-        stage('Git Checkout'){
-                    when { expression {  params.action == 'create' } }
-            steps{
-            gitCheckout(
-                branch: "main",
-                url: "https://github.com/praveen1994dec/Java_app_3.0.git"
-            )
+    stages {
+        stage('Git Checkout') {
+            when { expression { params.action == 'create' } }
+            steps {
+                gitCheckout(
+                    branch: 'main',
+                    url: 'https://github.com/Ratnadip-Patil/Netflix-clone.git'
+                )
             }
         }
-         
-        
-        stage('Docker Image Build'){
-         when { expression {  params.action == 'create' } }
-            steps{
-               script{
-                   
-                   dockerBuild("${params.ImageName}","${params.ImageTag}","${params.DockerHubUser}")
-               }
+
+        stage('Docker Image Build') {
+            when { expression { params.action == 'create' } }
+            steps {
+                script {
+                    dockerBuild("${params.ImageName}", "${params.ImageTag}", "${params.DockerHubUser}")
+                }
             }
         }
-         
-        stage('Docker Image Push : DockerHub '){
-         when { expression {  params.action == 'create' } }
-            steps{
-               script{
-                   
-                   dockerImagePush("${params.ImageName}","${params.ImageTag}","${params.DockerHubUser}")
-               }
+
+        stage('Docker Image Push: DockerHub') {
+            when { expression { params.action == 'create' } }
+            steps {
+                script {
+                    dockerImagePush("${params.ImageName}", "${params.ImageTag}", "${params.ratnadip2703}", "${params.#Patil1234}")
+                }
             }
-        }   
-        stage('K8s deoloyment'){
-         when { expression {  params.action == 'create' } }
-            steps{
-               script{
-                   
-                   kubectl apply -f deployment.yml
-                   kubectl apply -f service.yml
-                   kubectl expose deployment netflix-app-deployment --type=NodePort
-                   kubectl port-forward svc/reddit-clone-service 3000:30007 --address 0.0.0.0
+        }
 
+        stage('Kubernetes Deployment') {
+            when { expression { params.action == 'create' } }
+            steps {
+                script {
+                    // Apply Kubernetes deployment and service manifests
+                    sh 'kubectl apply -f deployment.yml'
+                    sh 'kubectl apply -f service.yml'
+                    sh 'kubectl expose deployment netflix-app-deployment --type=NodePort'
+                    sh 'kubectl port-forward svc/reddit-clone-service 3000:30007 --address 0.0.0.0'
+                }
+            }
+        }
+    }
+}
 
-               }
             }
         } 
             
